@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2021 Brian Kubisiak <brian@kubisiak.com>
+#
+# SPDX-License-Identifier: GPL-3.0-only
+
+[package]
+name = "git-third-party"
+version = "0.0.0"
+authors = ["Brian Kubisiak <brian@kubisiak.com>"]
+edition = "2018"
+
+[dependencies]
+clap = "2"
