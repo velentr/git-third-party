@@ -19,7 +19,7 @@ pub fn run(args: &ArgMatches) {
 
 fn format_patches(src: &Path, revisions: &str) -> Vec<String> {
     let output = Command::new("git")
-        .args(["-C", src.to_str().unwrap(), "format-patch", revisions])
+        .args(&["-C", src.to_str().unwrap(), "format-patch", revisions])
         .output()
         .expect("internal error during format-patch");
 
@@ -39,7 +39,7 @@ fn apply_patches(patches: &[String], dir: Option<&str>) {
     let mut git_am = Command::new("git");
     git_am.arg("am");
     if let Some(dst_dir) = dir {
-        git_am.args(["--directory", dst_dir]);
+        git_am.args(&["--directory", dst_dir]);
     }
     git_am.args(patches);
 
