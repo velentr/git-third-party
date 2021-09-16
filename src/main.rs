@@ -35,7 +35,10 @@ fn main() {
                         .help("Source git revisions to cherry-pick")
                         .required(true)
                         .index(1),
-                ),
+                )
+                .arg(Arg::with_name("single-commit").short("1").help(
+                    "Treat <REVISIONS> as a single commit to cherry-pick",
+                )),
         )
         .get_matches();
 

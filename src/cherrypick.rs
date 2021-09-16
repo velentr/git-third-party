@@ -13,15 +13,26 @@ pub fn run(args: &ArgMatches) {
     let revisions = args.value_of("REVISIONS").unwrap();
     let src = Path::new(args.value_of("src-repo").unwrap());
 
-    let patches = format_patches(&src, revisions);
+    let patches =
+        format_patches(&src, revisions, args.is_present("single-commit"));
     apply_patches(&patches, args.value_of("dst-directory"));
 }
 
-fn format_patches(src: &Path, revisions: &str) -> Vec<String> {
-    let output = Command::new("git")
-        .args(&["-C", src.to_str().unwrap(), "format-patch", revisions])
-        .output()
-        .expect("internal error during format-patch");
+fn format_patches(
+    src: &Path,
+    revisions: &str,
+    single_commit: bool,
+) -> Vec<String> {
+    let mut git = Command::new("git");
+    git.args(&["-C", src.to_str().unwrap(), "format-patch"]);
+
+    if single_commit {
+        git.arg("-1");
+    }
+
+    git.arg(revisions);
+
+    let output = git.output().expect("internal error during format-patch");
 
     if !output.status.success() {
         std::io::stderr().write_all(&output.stderr).unwrap();
