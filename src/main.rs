@@ -18,6 +18,7 @@ fn main() {
                 .arg(
                     Arg::with_name("src-repo")
                         .short("s")
+                        .long("src-repo")
                         .help("Path to the source git repo")
                         .required(true)
                         .value_name("PATH")
@@ -26,6 +27,7 @@ fn main() {
                 .arg(
                     Arg::with_name("dst-directory")
                         .short("d")
+                        .long("dst-directory")
                         .help("Subdirectory where the code is vendored")
                         .value_name("PATH")
                         .takes_value(true),
