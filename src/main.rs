@@ -25,10 +25,18 @@ fn main() {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::with_name("src-directory")
+                        .short("S")
+                        .long("src-directory")
+                        .help("Directory in the source repo to pull patches from")
+                        .value_name("PATH")
+                        .takes_value(true),
+                )
+                .arg(
                     Arg::with_name("dst-directory")
                         .short("d")
                         .long("dst-directory")
-                        .help("Subdirectory where the code is vendored")
+                        .help("Directory in the destination repo where patches are applied")
                         .value_name("PATH")
                         .takes_value(true),
                 )

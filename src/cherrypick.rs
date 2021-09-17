@@ -13,15 +13,24 @@ pub fn run(args: &ArgMatches) {
     let revisions = args.value_of("REVISIONS").unwrap();
     let src = Path::new(args.value_of("src-repo").unwrap());
 
-    let patches =
-        format_patches(&src, revisions, args.is_present("single-commit"));
-    apply_patches(&patches, args.value_of("dst-directory"));
+    let patches = format_patches(
+        &src,
+        revisions,
+        args.is_present("single-commit"),
+        args.value_of("src-directory"),
+    );
+    apply_patches(
+        &patches,
+        args.value_of("dst-directory"),
+        args.value_of("src-directory"),
+    );
 }
 
 fn format_patches(
     src: &Path,
     revisions: &str,
     single_commit: bool,
+    src_directory: Option<&str>,
 ) -> Vec<String> {
     let mut git = Command::new("git");
     git.args(&["-C", src.to_str().unwrap(), "format-patch"]);
@@ -31,6 +40,11 @@ fn format_patches(
     }
 
     git.arg(revisions);
+
+    // filter patches to only include changes in the given source directory
+    if let Some(src_dir) = src_directory {
+        git.args(&["--", src_dir]);
+    }
 
     let output = git.output().expect("internal error during format-patch");
 
@@ -46,12 +60,29 @@ fn format_patches(
         .collect();
 }
 
-fn apply_patches(patches: &[String], dir: Option<&str>) {
+fn apply_patches(
+    patches: &[String],
+    dst_directory: Option<&str>,
+    src_directory: Option<&str>,
+) {
     let mut git_am = Command::new("git");
     git_am.arg("am");
-    if let Some(dst_dir) = dir {
+
+    if let Some(dst_dir) = dst_directory {
         git_am.args(&["--directory", dst_dir]);
     }
+
+    // if the patch was filtered on a subdirectory in the source repo,
+    // remove those path components to re-root it in this repo
+    if let Some(src_dir) = src_directory {
+        // TODO: this doesn't work correctly if the patch is filtered
+        // by a file instead of a directory
+        let num_components = Path::new(src_dir).components().count();
+        // +1 here to account for the leading 'b/' (note that the
+        // default argument is -p1)
+        git_am.arg(format!("-p{}", num_components + 1));
+    }
+
     git_am.args(patches);
 
     let rc = git_am.status().expect("internal error during git am");
