@@ -41,6 +41,17 @@ fn main() {
                         .takes_value(true),
                 )
                 .arg(
+                    Arg::with_name("trailer")
+                        .long("trailer")
+                        .help("Specify a (<token>, <value>) pair to apply as a trailer")
+                        .value_name("TOKEN>=<VALUE")
+                        .takes_value(true)
+                        .multiple(true)
+                        .number_of_values(2)
+                        .require_delimiter(true)
+                        .value_delimiter("="),
+                )
+                .arg(
                     Arg::with_name("REVISIONS")
                         .help("Source git revisions to cherry-pick")
                         .required(true)

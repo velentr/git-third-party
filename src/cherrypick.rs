@@ -19,6 +19,11 @@ pub fn run(args: &ArgMatches) {
         args.is_present("single-commit"),
         args.value_of("src-directory"),
     );
+
+    if let Some(trailers) = args.values_of("trailer") {
+        add_trailers(&patches, trailers);
+    }
+
     apply_patches(
         &patches,
         args.value_of("dst-directory"),
@@ -58,6 +63,36 @@ fn format_patches(
         .lines()
         .map(|line| src.join(line).as_path().to_str().unwrap().to_string())
         .collect();
+}
+
+fn add_trailers<'a>(
+    patches: &[String],
+    trailers: impl std::iter::Iterator<Item = &'a str>,
+) {
+    let mut git_interpret_trailers = Command::new("git");
+    git_interpret_trailers.args(&["interpret-trailers", "--in-place"]);
+
+    // transform a list of [token0, value0, token1, value1] into
+    // [(token0, value0), (token1, value1)]
+    let (tokens, values): (Vec<(usize, &str)>, Vec<(usize, &str)>) =
+        trailers.enumerate().partition(|&(i, _)| i % 2 == 0);
+    for ((_, token), (_, value)) in tokens.iter().zip(values.iter()) {
+        let trailer = format!("{}={}", token, value);
+        git_interpret_trailers.args(&["--trailer", &trailer]);
+    }
+
+    // Note that this will respect the user's git config for trailer
+    // placement (eg trailer.<token>.where). I recommend using the
+    // config file instead of passing args through to
+    // git-interpret-trailers(1).
+    git_interpret_trailers.args(patches);
+
+    let rc = git_interpret_trailers
+        .status()
+        .expect("internal error during git interpret-trailers");
+    if !rc.success() {
+        std::process::exit(rc.code().unwrap());
+    }
 }
 
 fn apply_patches(
