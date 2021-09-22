@@ -6,6 +6,7 @@ extern crate clap;
 use clap::{App, Arg, SubCommand};
 
 mod cherrypick;
+mod clone;
 
 fn main() {
     let matches = App::new("git-third-party")
@@ -61,11 +62,46 @@ fn main() {
                     "Treat <REVISIONS> as a single commit to cherry-pick",
                 )),
         )
+        .subcommand(
+            SubCommand::with_name("clone")
+                .about("Vendor a third-party repo")
+                .arg(
+                    Arg::with_name("TREE-ISH")
+                        .help("The commit or branch to clone")
+                        .default_value("master")
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("src-repo")
+                        .short("s")
+                        .long("src-repo")
+                        .help("Path to the source git repo")
+                        .required(true)
+                        .value_name("PATH")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("dst-directory")
+                        .short("d")
+                        .long("dst-directory")
+                        .help("Directory in the destination repo where patches are applied")
+                        .value_name("PATH")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("squash")
+                        .long("squash")
+                        .help("Squash the third-party repo into a single commit"),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
         ("cherry-pick", Some(submatch)) => {
             cherrypick::run(submatch);
+        }
+        ("clone", Some(submatch)) => {
+            clone::run(submatch);
         }
         _ => {
             // no subcommand
