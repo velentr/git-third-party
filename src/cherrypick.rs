@@ -95,7 +95,7 @@ fn add_trailers<'a>(
     }
 }
 
-fn apply_patches(
+pub fn apply_patches(
     patches: &[String],
     dst_directory: Option<&str>,
     src_directory: Option<&str>,

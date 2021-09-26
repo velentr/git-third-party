@@ -8,12 +8,13 @@ use std::process::{Command, Stdio};
 
 use clap::ArgMatches;
 
+use crate::cherrypick;
+
 pub fn run(args: &ArgMatches) {
     if args.is_present("squash") {
         squash(args);
     } else {
-        // TODO: implement this
-        panic!("git-third-party clone must be --squash'd!");
+        full_clone(args);
     }
 }
 
@@ -31,6 +32,41 @@ fn toplevel() -> String {
         .unwrap()
         .trim_end()
         .to_string();
+}
+
+fn full_clone(args: &ArgMatches) {
+    // these are required arguments, so they should not panic
+    let branch = args.value_of("TREE-ISH").unwrap();
+    let src = Path::new(args.value_of("src-repo").unwrap());
+
+    let patches = format_patches(&src, branch);
+
+    cherrypick::apply_patches(&patches, args.value_of("dst-directory"), None);
+}
+
+// TODO: refactor this to share code with cherrypick::format_patches()
+fn format_patches(src: &Path, branch: &str) -> Vec<String> {
+    let mut git = Command::new("git");
+    git.args(&[
+        "-C",
+        src.to_str().unwrap(),
+        "format-patch",
+        "--root",
+        branch,
+    ]);
+
+    let output = git.output().expect("internal error during format-patch");
+
+    if !output.status.success() {
+        std::io::stderr().write_all(&output.stderr).unwrap();
+        std::process::exit(output.status.code().unwrap());
+    }
+
+    let patch_output = std::str::from_utf8(&output.stdout).unwrap();
+    return patch_output
+        .lines()
+        .map(|line| src.join(line).as_path().to_str().unwrap().to_string())
+        .collect();
 }
 
 fn squash(args: &ArgMatches) {
