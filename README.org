@@ -1,0 +1,44 @@
+#+title: git-third-party
+#+author: Brian Kubisiak
+
+Manage vendored third-party code in git.
+
+In monorepo software projects, it is common to check in code from
+third-party dependencies into the monorepo (called "vendoring"). This
+allows the developers of the monorepo to patch the third-party code
+directly without having to get a change merged upstream.
+
+Managing these vendored projects will often involve cherry-picking
+upstream commits to fix bugs or exporting patches from the monorepo
+for use upstream. ~git-third-party~ helps with this by allowing
+cherry-picking commits in separate git repos, optionally adding or
+removing directory prefixes.
+
+* example
+
+Say you want to vendor the ~foobar~ library (from the ~v1.0~ tag) in
+your git monorepo:
+
+#+BEGIN_SRC
+$ cd ~/src/monorepo
+$ git third-party clone --squash -s ~/src/foobar -d third_party/foobar v1.0
+$ git add third_party/foobar && git commit -m 'foobar: check in v1.0'
+#+END_SRC
+
+After some development, you find a bug and fix it locally in the
+monorepo. Later, when you want to upstream the fix:
+
+#+BEGIN_SRC
+$ cd ~/src/foobar
+$ git third-party cherry-pick -s ~/src/monorepo -S third_party/foobar -1 <commit hash>
+#+END_SRC
+
+Then create a pull request with the new commit.
+
+Eventually, ~foobar v1.1~ is released with bugfixes that you want to
+pull in locally:
+
+#+BEGIN_SRC
+$ cd ~/src/monorepo
+$ git third-party cherry-pick -s ~/src/foobar -d third_party/foobar v1.1...v1.0
+#+END_SRC
