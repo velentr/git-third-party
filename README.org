@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021 Brian Kubisiak <brian@kubisiak.com>
+# SPDX-License-Identifier: CC0-1.0
+
 #+title: git-third-party
 #+author: Brian Kubisiak
 
